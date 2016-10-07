@@ -48,6 +48,20 @@ int main(int argc, char **argv){
   int pos = 0, col = 0, row = 0;
   char *buf = (char*)malloc(sizeof(char)*255);
   noecho();//отключает вывод символа при вводе
+  if(argc == 2){//загрузка при входе если выбран файл
+    FILE* file;
+    struct stat status;
+    file = fopen(argv[1],"rb");
+    stat(argv[1],&status);
+    buf = realloc (buf, sizeof(char)*status.st_size);
+    pos = status.st_size;
+    part = (int)status.st_size/255;
+    fread(buf,1,status.st_size,file);
+    fclose(file);
+    wmove(textwnd,0,0);
+    wprintw(textwnd,"%s",buf);
+    wrefresh(textwnd);
+  }
   while(true){
     temp = (int)getch();
      printf("%d ",temp);
@@ -63,17 +77,17 @@ int main(int argc, char **argv){
         wmove(textwnd,row,col);
         wrefresh(textwnd);
       }; break;
-      // case KEY_UP: {
-      //   if(row>0)
-      //     row--;
-      //   wmove(textwnd,row,col);
-      //   wrefresh(textwnd);
-      // }; break;
-      // case KEY_DOWN: {
-      //   row++;
-      //   wmove(textwnd,row,col);
-      //   wrefresh(textwnd);
-      // }; break;
+      case KEY_UP: {
+        if(row>0)
+          row--;
+        wmove(textwnd,row,col);
+        wrefresh(textwnd);
+      }; break;
+      case KEY_DOWN: {
+        row++;
+        wmove(textwnd,row,col);
+        wrefresh(textwnd);
+      }; break;
 
       case 127: {//Удаление символа
         pos--;
@@ -84,17 +98,27 @@ int main(int argc, char **argv){
         wrefresh(textwnd);
       }; break;
 
-      case 15: {//CTRL+O
-        FILE* file = fopen("./temp.bin","wb");
+      case 15: {//CTRL+O сохранение
+        FILE* file;
+        if(argc == 1)
+          file = fopen("./temp.bin","wb");
+        else
+          file = fopen(argv[1],"wb");
         // fprintf(file,"%s",buf);
         fwrite(buf,1,pos,file);
         fclose(file);
       }; break;
 
-      case 12: {//CTRL+L
-        FILE* file = fopen("./temp.bin","rb");
+      case 12: {//CTRL+L загрузка
+        FILE* file;
         struct stat status;
-        stat("temp.bin",&status);
+        if(argc == 1){
+          file = fopen("temp.bin","rb");
+          stat("temp.bin",&status);
+        } else {
+          file = fopen(argv[1],"rb");
+          stat(argv[1],&status);
+        }
         buf = realloc (buf, sizeof(char)*status.st_size);
         pos = status.st_size;
         part = (int)status.st_size/255;
@@ -123,7 +147,8 @@ int main(int argc, char **argv){
         refresh();
         endwin();
         free(buf);
-        exit(EXIT_SUCCESS);
+        //exit(EXIT_SUCCESS);
+        return 0;
       }; break;
 
       default: {
@@ -144,5 +169,5 @@ int main(int argc, char **argv){
       }; break;
     }
   }
-
+  return 0;
 }
